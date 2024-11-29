@@ -1,8 +1,6 @@
-name: Website Monitor
-on:
-  schedule:
-    - cron: '*/13 * * * *'  # Runs every 13 minutes
-  workflow_dispatch:  # Allows manual trigger
+name: Monitor Workflow
+
+on: [push, workflow_dispatch]
 
 jobs:
   monitor:
@@ -19,4 +17,26 @@ jobs:
       run: pip install -r requirements.txt
       
     - name: Run monitoring script
-      run: python monitor.py
+      env:
+        MAX_ATTEMPTS: 3
+      run: |
+        attempt=0
+        while [ $attempt -lt $MAX_ATTEMPTS ]; do
+          python monitor.py && break
+          attempt=$((attempt+1))
+          if [ $attempt -lt $MAX_ATTEMPTS ]; then
+            echo "Attempt $attempt failed. Retrying in 60 seconds..."
+            sleep 60
+          else
+            echo "All attempts failed"
+            exit 1
+          fi
+        done
+        echo "📡✅ Monitoring script executed successfully"
+
+    - name: Upload logs
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: monitor-logs
+        path: logs/monitor.log
