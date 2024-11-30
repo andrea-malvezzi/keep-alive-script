@@ -1,14 +1,18 @@
 import requests
-import datetime
 import logging
 import os
+from datetime import datetime
 
 # Create logs dir if it doesn't exist
 os.makedirs('logs', exist_ok=True)
 
+# Create a timestamped log filename (one per run)
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+log_filename = f'logs/monitor_{timestamp}.log'
+
 # Set up logging
 logging.basicConfig(
-    filename="monitor.log",
+    filename=log_filename,
     level=logging.INFO,
     # timestamp, severity (info, warning, error) and message
     format="%(asctime)s - %(levelname)s - %(message)s"
@@ -29,13 +33,13 @@ def ping_website(url:str, page:str) -> bool:#
     try:
         response = requests.get(f"{url}/{page}")
         if response.status_code == 200:
-            logging.info(f"✅ {datetime.datetime.now()}: {url} is up! Status code: {response.status_code}")
+            logging.info(f"✅ {datetime.now()}: {url} is up! Status code: {response.status_code}")
             return True
         elif response.status_code == 403:
-            logging.warning(f"❌ {datetime.datetime.now()}: Access to {url} is forbidden (Status Code {response.status_code}).")
+            logging.warning(f"❌ {datetime.now()}: Access to {url} is forbidden (Status Code {response.status_code}).")
             return False
         else:
-            logging.error(f"❌ {datetime.datetime.now()}: Failed to ping {url}. Status Code: {response.status_code}")
+            logging.error(f"❌ {datetime.now()}: Failed to ping {url}. Status Code: {response.status_code}")
             return False
     except requests.exceptions.RequestException as e:
         logging.error(f"❌ Error pinging {url}/{page}: {e}")
